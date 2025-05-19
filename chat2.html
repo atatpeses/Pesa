@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+      color: white;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(8px);
+      position: relative;
+    }
+
+    header h2 {
+      margin: 0;
+      user-select: none;
+    }
+
+    #logout {
+      background: #E53935;
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* 3 dots icon container */
+    #menu-button {
+      width: 30px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      margin-left: 10px;
+    }
+    #menu-button span {
+      height: 4px;
+      background: white;
+      border-radius: 2px;
+      display: block;
+    }
+
+    /* Dropdown menu */
+    #user-list-menu {
+      position: absolute;
+      top: 55px;
+      right: 60px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      backdrop-filter: blur(8px);
+      padding: 10px 15px;
+      width: 180px;
+      display: none;
+      flex-direction: column;
+      max-height: 250px;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    #user-list-menu h3 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      padding-bottom: 5px;
+    }
+
+    #user-list-menu div.user-item {
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 14px;
+      user-select: none;
+    }
+
+    #user-list-menu div.user-item:last-child {
+      border-bottom: none;
+    }
+
+    #messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px 15px;
+      border-radius: 12px;
+      max-width: 75%;
+      align-self: flex-start;
+    }
+
+    .you {
+      background: #4FC3F7;
+      color: black;
+      align-self: flex-end;
+    }
+
+    form {
+      display: flex;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: none;
+      font-size: 16px;
+    }
+
+    button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      background: #03A9F4;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h2>Ata tpeses✈️</h2>
+    <div style="display: flex; align-items: center;">
+      <div id="menu-button" title="Lista e përdoruesve">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <button id="logout">Dil</button>
+    </div>
+
+    <div id="user-list-menu">
+      <h3>Përdoruesit në grup</h3>
+      <div id="user-list">
+        <!-- Emrat do të shtohen këtu -->
+      </div>
+    </div>
+  </header>
+
+  <div id="messages"></div>
+
+  <form id="chat-form">
+    <input type="text" id="message-input" placeholder="Shkruaj një mesazh..." required />
+    <button type="submit">Dërgo</button>
+  </form>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBdxmSSqjQc9Fhsvkl7lTSagbJXCFj6dEo",
+      authDomain: "chat-d350f.firebaseapp.com",
+      databaseURL: "https://chat-d350f-default-rtdb.firebaseio.com",
+      projectId: "chat-d350f",
+      storageBucket: "chat-d350f.appspot.com",
+      messagingSenderId: "739267847246",
+      appId: "1:739267847246:web:491c67013ee1dde2620f1f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const messagesDiv = document.getElementById("messages");
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("message-input");
+    const logoutBtn = document.getElementById("logout");
+    const menuBtn = document.getElementById("menu-button");
+    const userListMenu = document.getElementById("user-list-menu");
+    const userListDiv = document.getElementById("user-list");
+
+    let username = "Anonim";
+    let group = "general";
+    let usersSet = new Set();
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        username = user.email || "Anonim";
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      auth.signOut().then(() => window.location.href = "login.html");
+    });
+
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (text) {
+        db.ref("groups/" + group).push({
+          user: username,
+          text: text,
+          timestamp: Date.now()
+        });
+        input.value = "";
+      }
+    });
+
+    db.ref("groups/" + group).on("child_added", snapshot => {
+      const data = snapshot.val();
+      // Shto mesazhin
+      const msg = document.createElement("div");
+      msg.className = "message";
+      if (data.user === username) msg.classList.add("you");
+      msg.textContent = data.user + ": " + data.text;
+      messagesDiv.appendChild(msg);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      // Shto përdoruesin në listë nëse nuk ekziston
+      if (!usersSet.has(data.user)) {
+        usersSet.add(data.user);
+        const userItem = document.createElement("div");
+        userItem.className = "user-item";
+        userItem.textContent = data.user;
+        userListDiv.appendChild(userItem);
+      }
+    });
+
+    // Toggle dropdown menu
+    menuBtn.addEventListener("click", () => {
+      if (userListMenu.style.display === "flex") {
+        userListMenu.style.display = "none";
+      } else {
+        userListMenu.style.display = "flex";
+      }
+    });
+
+    // Mbyll menu nëse klikoj jashtë saj
+    document.addEventListener("click", e => {
+      if (!menuBtn.contains(e.target) && !userListMenu.contains(e.target)) {
+        userListMenu.style.display = "none";
+      }
+    });
+    
+  </script>
+</body>
+</html>
