@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login / Signup</title>
+  <style>
+      *{
+          box-sizing: border-box;
+      }
+    /* Background me gradient nga blu i errët te qielli dhe e bardhë */
+    body {
+      margin: 0;
+      height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(180deg, #0d1b3d, #3a7bd5, #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 15px;
+      padding: 30px 25px;
+      width: 100%;
+      max-width: 380px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      color: #0d1b3d;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 25px;
+      font-weight: 700;
+      font-size: 1.8rem;
+      letter-spacing: 1.2px;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 15px 20px;
+      margin: 12px 0;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.25);
+      font-size: 1rem;
+      color: #0d1b3d;
+      outline: none;
+      backdrop-filter: blur(6px);
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="email"]::placeholder,
+    input[type="password"]::placeholder {
+      color: rgba(13, 27, 61, 0.7);
+    }
+
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+      border-color: #3a7bd5;
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+      background: #3a7bd5;
+      box-shadow: 0 4px 12px rgba(58, 123, 213, 0.7);
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #2a5db0;
+      box-shadow: 0 6px 16px rgba(42, 93, 176, 0.9);
+    }
+
+    #status {
+      margin-top: 18px;
+      min-height: 24px;
+      font-weight: 600;
+      color: #d9534f; /* ku gabim, ku është error */
+    }
+
+    @media (max-width: 450px) {
+      .container {
+        padding: 25px 20px;
+        max-width: 100%;
+      }
+
+      h2 {
+        font-size: 1.6rem;
+      }
+
+      input[type="email"],
+      input[type="password"],
+      button {
+        font-size: 1rem;
+        padding: 13px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Hyr ose Regjistrohu</h2>
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button onclick="login()">Hyr</button>
+    <button onclick="signup()">Regjistrohu</button>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBdxmSSqjQc9Fhsvkl7lTSagbJXCFj6dEo",
+      authDomain: "chat-d350f.firebaseapp.com",
+      projectId: "chat-d350f",
+      storageBucket: "chat-d350f.appspot.com",
+      messagingSenderId: "739267847246",
+      appId: "1:739267847246:web:491c67013ee1dde2620f1f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    function login() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(() => window.location.href = "chat2.html")
+        .catch(e => alert(e.message));
+    }
+
+    function signup() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then(() => window.location.href = "chat2.html")
+        .catch(e => alert(e.message));
+    }
+  </script>
+</body>
+</html>
